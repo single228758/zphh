@@ -1,0 +1,7 @@
+{
+    "refresh_token": "F12-Application-Cookies里面看有没有chatglm_refresh_token",
+    "commands": {
+        "draw": "绘",
+        "reset": "z重置会话"
+    }
+} 
