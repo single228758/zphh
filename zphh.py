@@ -86,7 +86,9 @@ class ZPHHPlugin(Plugin):
     def get_help_text(self, **kwargs):
         help_text = "AI绘画插件\n"
         help_text += "使用方法:\n"
-        help_text += f"{self.config.get('commands', {}).get('draw', '绘')} [提示词]: 生成图片\n"
+        commands = self.config.get('commands', {})
+        draw_command = commands.get('draw', '绘') if isinstance(commands, dict) else '绘'
+        help_text += f"{draw_command} [提示词]: 生成图片\n"
         return help_text
 
     def on_handle_context(self, e_context: EventContext):
@@ -94,18 +96,20 @@ class ZPHHPlugin(Plugin):
             return
 
         content = e_context["context"].content
-        if content == self.config.get('commands', {}).get('reset', 'z重置会话'):
+        commands = self.config.get('commands', {})
+        reset_command = commands.get('reset', 'z重置会话') if isinstance(commands, dict) else 'z重置会话'
+        if content == reset_command:
             self.conversation_id = ""
             e_context["reply"] = Reply(ReplyType.INFO, "会话已重置")
             e_context.action = EventAction.BREAK_PASS
             return
 
-        if not content.startswith(self.config.get('commands', {}).get('draw', '绘')):
+        draw_command = commands.get('draw', '绘') if isinstance(commands, dict) else '绘'
+        if not content.startswith(draw_command):
             return
 
         try:
             # 提取用户输入的提示词
-            draw_command = self.config.get('commands', {}).get('draw', '绘')
             prompt = content[len(draw_command):].strip()
             if not prompt:
                 e_context["reply"] = Reply(ReplyType.ERROR, "请在命令后输入绘画提示词")
@@ -223,6 +227,8 @@ class ZPHHPlugin(Plugin):
                 return False
             
             device_id = str(uuid.uuid4()).replace("-", "")
+            request_id = str(uuid.uuid4()).replace("-", "")
+            
             headers = {
                 "Accept": "application/json, text/plain, */*",
                 "Accept-Language": "zh-CN,zh;q=0.9",
@@ -241,7 +247,7 @@ class ZPHHPlugin(Plugin):
                 "X-Device-Id": device_id,
                 "X-Device-Model": "",
                 "X-Exp-Groups": "na_android_config:exp:NA,mainchat_funcall:exp:A,chat_aisearch:exp:A,mainchat_rag:exp:A,mainchat_searchengine:exp:bing,na_4o_config:exp:4o_A,chat_live_4o:exp:A,na_glm4plus_config:exp:open,mainchat_server:exp:A,mainchat_browser:exp:new,mainchat_server_app:exp:A,mobile_history_daycheck:exp:a,mainchat_sug:exp:A",
-                "X-Request-Id": str(uuid.uuid4()).replace("-", ""),
+                "X-Request-Id": request_id,
                 "sec-ch-ua": '"Google Chrome";v="129", "Not=A?Brand";v="8", "Chromium";v="129"',
                 "sec-ch-ua-mobile": "?0",
                 "sec-ch-ua-platform": '"Windows"'
